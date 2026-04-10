@@ -328,6 +328,7 @@ func (s *Server) setupRoutes() {
 	})
 
 	s.engine.GET("/management.html", s.serveManagementControlPanel)
+	s.engine.GET("/", s.serveManagementControlPanel)
 	openaiHandlers := openai.NewOpenAIAPIHandler(s.handlers)
 	geminiHandlers := gemini.NewGeminiAPIHandler(s.handlers)
 	geminiCLIHandlers := gemini.NewGeminiCLIAPIHandler(s.handlers)
@@ -357,24 +358,16 @@ func (s *Server) setupRoutes() {
 		v1beta.GET("/models/*action", geminiHandlers.GeminiGetHandler)
 	}
 
-	// Root endpoint
-	s.engine.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "CLI Proxy API Server",
-			"endpoints": []string{
-				"POST /v1/chat/completions",
-				"POST /v1/completions",
-				"GET /v1/models",
-			},
-		})
-	})
-
 	// Event logging endpoint - handles Claude Code telemetry requests
 	// Returns 200 OK to prevent 404 errors in logs
 	s.engine.POST("/api/event_logging/batch", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 	s.engine.POST("/v1internal:method", geminiCLIHandlers.CLIHandler)
+
+	s.engine.NoRoute(func(c *gin.Context) {
+		s.serveManagementControlPanel(c)
+	})
 
 	// OAuth callback endpoints (reuse main server port)
 	// These endpoints receive provider redirects and persist
@@ -711,6 +704,14 @@ func (s *Server) serveManagementControlPanel(c *gin.Context) {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
+
+	// First check if we have embedded HTML
+	if embedded := managementasset.GetIndexHTML(); len(embedded) > 0 {
+		c.Data(http.StatusOK, "text/html; charset=utf-8", embedded)
+		return
+	}
+
+	// Fallback to disk asset
 	filePath := managementasset.FilePath(s.configFilePath)
 	if strings.TrimSpace(filePath) == "" {
 		c.AbortWithStatus(http.StatusNotFound)

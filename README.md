@@ -17,3 +17,7 @@ If you need to submit any non-third-party provider changes, please open them aga
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Project Structure & Submodules
+
+- **`ui/`**: Contains the [Cli-Proxy-API-Management-Center](https://github.com/robertpelloni/Cli-Proxy-API-Management-Center) web interface. This single-page React application is built and natively embedded into the CLIProxyAPI binary using `go:embed`.
