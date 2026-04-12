@@ -701,7 +701,6 @@ func (s *Server) managementAvailabilityMiddleware() gin.HandlerFunc {
 func (s *Server) serveManagementControlPanel(c *gin.Context) {
 	cfg := s.cfg
 	if cfg == nil || cfg.RemoteManagement.DisableControlPanel {
-		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
@@ -709,9 +708,8 @@ func (s *Server) serveManagementControlPanel(c *gin.Context) {
 	if embedded := managementasset.GetIndexHTML(); len(embedded) > 0 {
 		c.Data(http.StatusOK, "text/html; charset=utf-8", embedded)
 		return
-	}
 
-	// Fallback to disk asset
+	}
 	filePath := managementasset.FilePath(s.configFilePath)
 	if strings.TrimSpace(filePath) == "" {
 		c.AbortWithStatus(http.StatusNotFound)
