@@ -1,27 +1,37 @@
 # CLIProxyAPI Plus - Architecture, Patterns, and Decisions
 
 ## High-Level Overview
-CLIProxyAPI Plus acts as a universal proxy intercepting calls to leading inference platforms (OpenAI, Anthropic, Gemini, Codex) and transparently normalizing, routing, and translating these payloads via a robust canonical `ThinkingConfig` engine. 
+CLIProxyAPI Plus is a robust, Go-based proxy server designed to provide a unified, zero-configuration interface for leading AI models (OpenAI, Anthropic Claude, Google Gemini, GitHub Copilot/Codex). It bridges the gap between disparate provider APIs, offering seamless translation, load balancing, quota management, and token routing.
 
-## Architectural Modules
-1. **Frontend UI (`ui/`)**: A Single-Page React Application (Cli-Proxy-API-Management-Center) heavily leveraging `Zustand` for state management and `react-router-dom`. It is kept as a git submodule to cleanly separate the complex JavaScript ecosystem from the main Go codebase.
-2. **Go Backend (`cmd/server` & `internal/`)**: Uses `gin-gonic/gin` for highly performant HTTP multiplexing.
-3. **Translators & Executors**: The codebase employs a strict distinction between *Translating* (converting specific JSON dialects like Claude to Canonical) and *Executing* (sending the finalized canonical JSON payload to upstream APIs like Gemini and managing the connection lifecycle).
+## Core Architecture
+The project architecture is heavily modularized, utilizing the **Gin HTTP framework** for routing and middleware. 
 
-## Patterns and Implementations
-### UI Embedding (`go:embed`)
-Instead of serving HTML files from disk paths which can break in Docker or remote deployment scenarios, the project builds the React UI into a single HTML file via Vite, and uses `go:embed` inside `internal/managementasset/ui.go`. 
-*   **Result**: The server guarantees that the management portal is always shipped natively alongside the proxy logic.
+1.  **Entrypoint (`cmd/server/main.go`)**: Parses flags, loads configurations, and launches the Gin server or specific CLI/auth modes.
+2.  **API Layer (`internal/api/`)**: Defines Gin routes, middleware (auth, cors, usage tracking), and the core HTTP Server struct.
+3.  **Thinking Pipeline (`internal/thinking/`)**: This is the heart of the normalization engine. It takes disparate provider payloads, normalizes them into a canonical `ThinkingConfig` representation, validates them, and translates them back out into provider-specific formats via `ProviderApplier`.
+4.  **Runtime Executors (`internal/runtime/executor/`)**: Handlers that actually establish the connections and execute the requests to upstream providers (e.g., handling WebSockets for Codex).
+5.  **Translators (`internal/translator/`)**: Dedicated packages for translating protocol A to protocol B (e.g., OpenAI to Claude, Codex to Gemini).
+6.  **Web UI Submodule (`ui/`)**: A React/Vite single-page application ([Cli-Proxy-API-Management-Center](https://github.com/robertpelloni/Cli-Proxy-API-Management-Center)) that acts as the Management Center. It interacts with the Go backend via `/v0/management` endpoints.
 
-### Routing Elegance
-`internal/api/server.go` leverages the Gin framework to bind the embedded UI logic to three critical endpoints simultaneously:
-1.  `/` - To greet any user dropping directly onto the port with the management panel.
-2.  `/management.html` - Legacy support.
-3.  `s.engine.NoRoute` - To gracefully trap 404s and redirect them to the frontend router where React router can appropriately handle them.
+## Recent Architectural Decisions & Patterns
 
-### Auto-Updater Decoupling
-Because `go:embed` ensures the UI is always present, the legacy dynamic GitHub `StartAutoUpdater` polling loop in `internal/managementasset/updater.go` was cleverly bypassed if `len(GetIndexHTML()) > 0`. This significantly reduces startup network noise and background polling for self-hosted instances.
+### 1. Native UI Embedding (`go:embed`)
+Instead of relying on the host file system or a fragile background auto-updater pulling from GitHub to serve the Management Web UI, the project now natively embeds the `ui/dist/index.html` file directly into the compiled Go binary using `go:embed`.
+*   **Pattern**: The `serveManagementControlPanel` handler in `server.go` first checks the embedded byte slice. If present, it serves it directly from memory with a `text/html` content type.
+*   **Fallback**: If the embedded asset isn't found (e.g., built incorrectly), it falls back to the legacy file system and auto-updater behavior.
 
-## Design Decisions
-*   **User Empathy (UI Labels)**: The user wants to ensure the UI is extremely clear. Descriptions are wrapped using `i18n` translation hooks like `t('quota_management.description', 'Manage and monitor...')` to provide immediate English fallback context if translation strings aren't mapped yet.
-*   **Strict Testing**: The backend relies heavily on `go test ./...`. Breaking any translator interface will immediately fail the suite. The UI utilizes strict ESLint and TypeScript checking to prevent type regressions before the static HTML is generated.
+### 2. Seamless UI Routing
+The server router has been updated so that the management UI is instantly accessible at multiple intuitive entry points:
+*   `/management.html` (Legacy explicit path)
+*   `/` (Root path, for zero-friction access when opening the port directly in a browser)
+*   `NoRoute` (Fallback, capturing any unhandled `GET` requests and surfacing the UI, which handles its own frontend routing)
+
+### 3. Code Conventions and State Management
+*   **Strict Documentation**: The project mandates extensive internal and user-facing documentation (`VISION.md`, `MEMORY.md`, `DEPLOY.md`, `TODO.md`, `CHANGELOG.md`).
+*   **Logging**: `logrus` is used exclusively for structured logging. Panics and fatal exits are strictly discouraged in favor of returning errors up the stack.
+*   **Submodules**: The `ui` folder is actively maintained as a git submodule to cleanly decouple the complex React frontend lifecycle from the Go backend, while still compiling together seamlessly.
+
+## Future Roadmap Focus (TODO.md / VISION.md)
+*   **UI/UX Improvements**: Extensive tooltips, descriptive labels, and clearer layout paradigms within the embedded React app to guide novice users through complex proxy routing settings.
+*   **Robustness**: Fortifying the translator packages to intelligently handle non-standard upstream HTTP errors without panicking.
+*   **Provider Parity**: Continuous research and seamless implementation of new inference providers into the canonical thinking pipeline.
