@@ -208,7 +208,10 @@ func (e *OpenAICompatExecutor) ExecuteStream(ctx context.Context, auth *cliproxy
 
 	// Request usage data in the final streaming chunk so that token statistics
 	// are captured even when the upstream is an OpenAI-compatible provider.
-	translated, _ = sjson.SetBytes(translated, "stream_options.include_usage", true)
+	// Many alternative providers fail if `stream_options` is provided, so we gate it.
+	if !strings.Contains(baseURL, "together.xyz") && !strings.Contains(baseURL, "api.mistral.ai") && !strings.Contains(baseURL, "api.cohere.ai") && !strings.Contains(baseURL, "openrouter.ai") && !strings.Contains(baseURL, "localhost") && !strings.Contains(baseURL, "api.groq.com") && !strings.Contains(baseURL, "api.deepseek.com") {
+		translated, _ = sjson.SetBytes(translated, "stream_options.include_usage", true)
+	}
 
 	url := strings.TrimSuffix(baseURL, "/") + "/chat/completions"
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(translated))
