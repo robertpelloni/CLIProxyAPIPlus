@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"github.com/router-for-me/CLIProxyAPI/v6/internal/translator/common"
 	"bufio"
 	"bytes"
 	"context"
@@ -4245,7 +4246,7 @@ func (h *webSearchHandler) callMcpAPI(request *kiroclaude.McpRequest) (*kiroclau
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("MCP API returned status %d: %s", resp.StatusCode, string(body))
+			return nil, fmt.Errorf("MCP API returned status %d: %s", resp.StatusCode, common.ExtractUpstreamError(body))
 		}
 
 		var mcpResponse kiroclaude.McpResponse
