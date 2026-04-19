@@ -143,6 +143,22 @@ type Config struct {
 	// from your current session. Default: false.
 	IncognitoBrowser bool `yaml:"incognito-browser" json:"incognito-browser"`
 
+	// NoBrowser disables automatically opening the browser when performing local OAuth flows.
+	// Users will need to manually copy and paste the provided URL.
+	NoBrowser bool `yaml:"no-browser" json:"no-browser"`
+
+	// OAuthCallbackPort defines a specific port for the local OAuth redirect server.
+	// Useful if running in environments where dynamic ports are disallowed.
+	// Default: 0 (random or provider-specific default).
+	OAuthCallbackPort int `yaml:"oauth-callback-port" json:"oauth-callback-port"`
+
+	// Standalone indicates if the server should run in embedded standalone mode
+	// when using the terminal UI.
+	Standalone bool `yaml:"standalone" json:"standalone"`
+
+	// LocalModel forces the use of the embedded model catalog, skipping remote model updates.
+	LocalModel bool `yaml:"local-model" json:"local-model"`
+
 	legacyMigrationPending bool `yaml:"-" json:"-"`
 }
 
