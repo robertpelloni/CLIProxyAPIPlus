@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+// OpenAIAudioToText handles multi-modal audio-to-text translations
+// for OpenAI endpoints.
+type OpenAIAudioToText struct{}
+
 // OpenAIInputAudio represents an OpenAI audio payload structure.
 type OpenAIInputAudio struct {
 	Type       string          `json:"type"`        // "input_audio"
@@ -17,8 +21,8 @@ type OpenAIAudioData struct {
 	Format string `json:"format"` // e.g. "mp3", "wav"
 }
 
-// ConvertAudioToOpenAIFormat takes raw base64 audio and a format and returns an OpenAI input_audio part.
-func ConvertAudioToOpenAIFormat(base64Audio, format string) ([]byte, error) {
+// TranslateAudio takes raw base64 audio and a format and returns an OpenAI input_audio part.
+func (a *OpenAIAudioToText) TranslateAudio(base64Audio, format string) ([]byte, error) {
 	audioFormat := "wav"
 	if format != "" {
 		audioFormat = strings.TrimPrefix(format, "audio/")
@@ -34,8 +38,8 @@ func ConvertAudioToOpenAIFormat(base64Audio, format string) ([]byte, error) {
 	return json.Marshal(audioPart)
 }
 
-// ParseOpenAIAudioFormat extracts base64 audio and format from an OpenAI input_audio part.
-func ParseOpenAIAudioFormat(payload []byte) (string, string, bool) {
+// Parse extracts base64 audio and format from an OpenAI input_audio part.
+func (a *OpenAIAudioToText) Parse(payload []byte) (string, string, bool) {
 	var audioPart OpenAIInputAudio
 	if err := json.Unmarshal(payload, &audioPart); err != nil {
 		return "", "", false

@@ -5,11 +5,12 @@ import (
 	"testing"
 )
 
-func TestConvertAudioToOpenAIFormat(t *testing.T) {
+func TestOpenAIAudioToText_TranslateAudio(t *testing.T) {
 	b64Audio := "base64encodedaudio=="
 	format := "mp3"
 
-	bytes, err := ConvertAudioToOpenAIFormat(b64Audio, format)
+	a := &OpenAIAudioToText{}
+	bytes, err := a.TranslateAudio(b64Audio, format)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -26,7 +27,7 @@ func TestConvertAudioToOpenAIFormat(t *testing.T) {
 	}
 }
 
-func TestParseOpenAIAudioFormat(t *testing.T) {
+func TestOpenAIAudioToText_Parse(t *testing.T) {
 	payload := []byte(`{
 		"type": "input_audio",
 		"input_audio": {
@@ -35,7 +36,8 @@ func TestParseOpenAIAudioFormat(t *testing.T) {
 		}
 	}`)
 
-	data, format, ok := ParseOpenAIAudioFormat(payload)
+	a := &OpenAIAudioToText{}
+	data, format, ok := a.Parse(payload)
 	if !ok {
 		t.Fatalf("expected successful parse")
 	}

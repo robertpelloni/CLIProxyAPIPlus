@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+// AudioToText handles multi-modal audio-to-text translations
+// for Claude endpoints.
+type AudioToText struct{}
+
 // ClaudeAudioData represents an audio payload for Claude.
 type ClaudeAudioData struct {
 	Type      string `json:"type"`       // e.g. "base64"
@@ -18,8 +22,8 @@ type ClaudeDocument struct {
 	Source ClaudeAudioData `json:"source"`
 }
 
-// ConvertAudioToClaudeFormat takes raw base64 audio and a format (e.g. mp3) and returns a Claude document part.
-func ConvertAudioToClaudeFormat(base64Audio, format string) ([]byte, error) {
+// TranslateAudio converts raw base64 audio and format into a Claude document part.
+func (a *AudioToText) TranslateAudio(base64Audio, format string) ([]byte, error) {
 	mediaType := "audio/wav"
 	if format != "" {
 		if strings.HasPrefix(format, "audio/") {
@@ -40,8 +44,8 @@ func ConvertAudioToClaudeFormat(base64Audio, format string) ([]byte, error) {
 	return json.Marshal(doc)
 }
 
-// ParseClaudeAudioFormat extracts base64 audio and format from a Claude document part.
-func ParseClaudeAudioFormat(payload []byte) (string, string, bool) {
+// Parse extracts base64 audio and format from a Claude document part.
+func (a *AudioToText) Parse(payload []byte) (string, string, bool) {
 	var doc ClaudeDocument
 	if err := json.Unmarshal(payload, &doc); err != nil {
 		return "", "", false

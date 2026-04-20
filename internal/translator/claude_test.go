@@ -5,11 +5,12 @@ import (
 	"testing"
 )
 
-func TestConvertAudioToClaudeFormat(t *testing.T) {
+func TestClaudeAudioToText_TranslateAudio(t *testing.T) {
 	b64Audio := "UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA="
 	format := "wav"
 
-	bytes, err := ConvertAudioToClaudeFormat(b64Audio, format)
+	a := &AudioToText{}
+	bytes, err := a.TranslateAudio(b64Audio, format)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -26,7 +27,7 @@ func TestConvertAudioToClaudeFormat(t *testing.T) {
 	}
 }
 
-func TestParseClaudeAudioFormat(t *testing.T) {
+func TestClaudeAudioToText_Parse(t *testing.T) {
 	payload := []byte(`{
 		"type": "document",
 		"source": {
@@ -36,7 +37,8 @@ func TestParseClaudeAudioFormat(t *testing.T) {
 		}
 	}`)
 
-	data, format, ok := ParseClaudeAudioFormat(payload)
+	a := &AudioToText{}
+	data, format, ok := a.Parse(payload)
 	if !ok {
 		t.Fatalf("expected successful parse")
 	}
