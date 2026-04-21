@@ -106,6 +106,18 @@ func GetCodeBuddyModels() []*ModelInfo {
 			SupportedEndpoints:  []string{"/chat/completions"},
 		},
 		{
+			ID:                  "deepseek-coder-v2",
+			Object:              "model",
+			Created:             now,
+			OwnedBy:             "deepseek",
+			Type:                "codebuddy",
+			DisplayName:         "DeepSeek Coder V2",
+			Description:         "DeepSeek Coder V2 via CodeBuddy",
+			ContextLength:       128000,
+			MaxCompletionTokens: 8192,
+			SupportedEndpoints:  []string{"/chat/completions"},
+		},
+		{
 			ID:                  "glm-5v-turbo",
 			Object:              "model",
 			Created:             now,

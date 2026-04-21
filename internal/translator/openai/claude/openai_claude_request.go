@@ -157,7 +157,7 @@ func ConvertClaudeRequestToOpenAI(modelName string, inputRawJSON []byte, stream 
 					case "redacted_thinking":
 						// Explicitly ignore redacted_thinking - never map to reasoning_content (AC2)
 
-					case "text", "image":
+					case "text", "image", "document":
 						if contentItem, ok := convertClaudeContentPart(part); ok {
 							contentItems = append(contentItems, []byte(contentItem))
 						}
@@ -373,6 +373,27 @@ func convertClaudeContentPart(part gjson.Result) (string, bool) {
 		imageContent, _ = sjson.SetBytes(imageContent, "image_url.url", imageURL)
 
 		return string(imageContent), true
+
+
+	case "document":
+		var audioData string
+		var audioFormat string
+		if source := part.Get("source"); source.Exists() {
+			if source.Get("type").String() == "base64" {
+				mediaType := source.Get("media_type").String()
+				if strings.HasPrefix(mediaType, "audio/") {
+					audioFormat = strings.TrimPrefix(mediaType, "audio/")
+					audioData = source.Get("data").String()
+				}
+			}
+		}
+		if audioData == "" || audioFormat == "" {
+			return "", false
+		}
+		audioContent := []byte(`{"type":"input_audio","input_audio":{"data":"","format":""}}`)
+		audioContent, _ = sjson.SetBytes(audioContent, "input_audio.data", audioData)
+		audioContent, _ = sjson.SetBytes(audioContent, "input_audio.format", audioFormat)
+		return string(audioContent), true
 
 	default:
 		return "", false

@@ -109,9 +109,33 @@ func createReverseProxy(upstreamURL string, secretSource SecretSource) (*httputi
 	// Modify incoming responses to handle gzip without Content-Encoding
 	// This addresses the same issue as inline handler gzip handling, but at the proxy level
 	proxy.ModifyResponse = func(resp *http.Response) error {
+<<<<<<< HEAD
 		if resp == nil {
 			return nil
 		}
+=======
+		// Log upstream error responses for diagnostics (502, 503, etc.)
+		// These are NOT proxy connection errors - the upstream responded with an error status
+		method := "UNKNOWN"
+		path := "UNKNOWN"
+		if resp.Request != nil {
+			method = resp.Request.Method
+			if resp.Request.URL != nil {
+				path = resp.Request.URL.Path
+			}
+		}
+
+		if resp.StatusCode >= 500 {
+			log.Errorf("amp upstream responded with error [%d] for %s %s", resp.StatusCode, method, path)
+		} else if resp.StatusCode >= 400 {
+			log.Warnf("amp upstream responded with client error [%d] for %s %s", resp.StatusCode, method, path)
+		}
+
+		// Only process successful responses for gzip decompression
+		// if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		// 	return nil
+		// }
+>>>>>>> origin/jules-9238706904812453426-8fd51539
 
 		if resp.Request != nil && resp.Request.URL != nil {
 			// Log upstream error responses for diagnostics (502, 503, etc.)

@@ -354,6 +354,18 @@ func convertOpenAIContentPartToClaudePart(part gjson.Result) string {
 				return string(docPart)
 			}
 		}
+
+	case "input_audio":
+		audioData := part.Get("input_audio.data").String()
+		audioFormat := part.Get("input_audio.format").String()
+		if audioData != "" && audioFormat != "" {
+			// Claude expects source.type="base64", source.media_type, source.data
+			audioPart := []byte(`{"type":"base64","media_type":"","data":""}`)
+			audioPart, _ = sjson.SetBytes(audioPart, "media_type", "audio/"+audioFormat)
+			audioPart, _ = sjson.SetBytes(audioPart, "data", audioData)
+			// Wrap it in a proper block
+			return `{"type":"document","source":` + string(audioPart) + `}`
+		}
 	}
 
 	return ""
