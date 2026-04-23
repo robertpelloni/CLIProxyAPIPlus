@@ -87,8 +87,3 @@ func Response(from, to string, ctx context.Context, modelName string, originalRe
 func ResponseNonStream(from, to string, ctx context.Context, modelName string, originalRequestRawJSON, requestRawJSON, rawJSON []byte, param *any) []byte {
 	return registry.TranslateNonStream(ctx, sdktranslator.FromString(from), sdktranslator.FromString(to), modelName, originalRequestRawJSON, requestRawJSON, rawJSON, param)
 }
-
-// LoadPlugins scans the specified directory for plugins and loads them into the registry.
-func LoadPlugins(dir string) error {
-	return registry.LoadPlugins(dir)
-}
