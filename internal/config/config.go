@@ -51,6 +51,9 @@ type Config struct {
 	// CommercialMode disables high-overhead HTTP middleware features to minimize per-request memory usage.
 	CommercialMode bool `yaml:"commercial-mode" json:"commercial-mode"`
 
+	// PluginDir is the directory path containing dynamically loadable translator plugin (.so) files.
+	PluginDir string `yaml:"plugin-dir" json:"plugin-dir"`
+
 	// LoggingToFile controls whether application logs are written to rotating files or stdout.
 	LoggingToFile bool `yaml:"logging-to-file" json:"logging-to-file"`
 
