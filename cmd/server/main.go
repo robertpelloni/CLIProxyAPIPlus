@@ -27,6 +27,7 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v6/internal/misc"
 	"github.com/router-for-me/CLIProxyAPI/v6/internal/registry"
 	"github.com/router-for-me/CLIProxyAPI/v6/internal/store"
+	"github.com/router-for-me/CLIProxyAPI/v6/internal/translator/translator"
 	_ "github.com/router-for-me/CLIProxyAPI/v6/internal/translator"
 	"github.com/router-for-me/CLIProxyAPI/v6/internal/tui"
 	"github.com/router-for-me/CLIProxyAPI/v6/internal/usage"
@@ -37,18 +38,24 @@ import (
 )
 
 var (
-	Version           = "dev"
-	Commit            = "none"
-	BuildDate         = "unknown"
+	Version           = ""
+	Commit            = ""
+	BuildDate         = ""
 	DefaultConfigPath = ""
 )
 
 // init initializes the shared logger setup.
 func init() {
 	logging.SetupBaseLogger()
-	buildinfo.Version = Version
-	buildinfo.Commit = Commit
-	buildinfo.BuildDate = BuildDate
+	if Version != "" {
+		buildinfo.Version = Version
+	}
+	if Commit != "" {
+		buildinfo.Commit = Commit
+	}
+	if BuildDate != "" {
+		buildinfo.BuildDate = BuildDate
+	}
 }
 
 // setKiroIncognitoMode sets the incognito browser mode for Kiro authentication.
@@ -473,6 +480,13 @@ func main() {
 	}
 	usage.SetStatisticsEnabled(cfg.UsageStatisticsEnabled)
 	coreauth.SetQuotaCooldownDisabled(cfg.DisableCooling)
+
+	// Load external translator plugins if directory is configured
+	if cfg.PluginDir != "" {
+		if err := translator.LoadPlugins(cfg.PluginDir); err != nil {
+			log.Errorf("failed to load external plugins from %s: %v", cfg.PluginDir, err)
+		}
+	}
 
 	if err = logging.ConfigureLogOutput(cfg); err != nil {
 		log.Errorf("failed to configure log output: %v", err)

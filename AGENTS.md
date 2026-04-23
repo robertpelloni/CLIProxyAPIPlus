@@ -6,8 +6,6 @@ Go 1.26+ proxy server providing OpenAI/Gemini/Claude/Codex compatible APIs with 
 - GitHub: https://github.com/router-for-me/CLIProxyAPI
 
 ## Commands
-- **UI Compilation**: If `ui/` files are changed, run `make generate-ui` to compile the submodule. `ui_build/management.html` is embedded inside the binary `internal/managementasset/embed.go` as a fallback.
-
 ```bash
 gofmt -w . # Format (required after Go changes)
 go build -o cli-proxy-api ./cmd/server # Build
