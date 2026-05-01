@@ -143,8 +143,13 @@ func TestAmpModule_OnConfigUpdated_CacheInvalidation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	m := &AmpModule{enabled: true}
+	m := New()
 	ms := NewMultiSourceSecretWithPath("", p, time.Minute)
+	// Clear environment for this test to avoid external interference
+	originalEnv := os.Getenv("AMP_API_KEY")
+	os.Unsetenv("AMP_API_KEY")
+	defer os.Setenv("AMP_API_KEY", originalEnv)
+
 	m.secretSource = ms
 	m.lastConfig = &config.AmpCode{
 		UpstreamAPIKey: "old-key",
